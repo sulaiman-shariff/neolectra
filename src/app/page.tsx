@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useScroll, useTransform, useMotionTemplate } from "framer-motion";
-import SolarPanel from "@/components/SolarPanel";
 import { useAppDispatch } from "@/components/reduxHooks";
 import { setHarvesting } from "@/components/UISlice";
 import { Poppins } from "next/font/google";
@@ -154,6 +153,11 @@ export default function Home() {
               Explore Map
             </button>
           </Link>
+          <Link href="/suggestions" className="ml-2">
+            <button className="text-xs sm:text-sm px-3 py-1 rounded-xl bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 transition shadow-lg">
+              View Suggestions
+            </button>
+          </Link>
         </nav>
       </motion.header>
 
@@ -189,15 +193,31 @@ export default function Home() {
             transition={{ delay: 0.25, duration: 0.8 }}
             className="mt-10 flex flex-wrap items-center justify-center gap-4"
           >
-            <Link href="/map" onClick={() => dispatch(setHarvesting(false))}>
-              <button className="group rounded-2xl border border-emerald-300/60 bg-emerald-400/30 px-6 py-3 text-sm font-semibold backdrop-blur-md hover:-translate-y-0.5 hover:bg-emerald-400/40 transition shadow-lg hover:shadow-emerald-400/40">
-                ☀️ Solar Solutions <span className="ml-2 inline-block group-hover:translate-x-1 transition">→</span>
+          <Link href="/userinput">
+            <button className="group rounded-2xl border border-emerald-300/60 bg-emerald-400/30 px-6 py-3 text-sm font-semibold backdrop-blur-md hover:-translate-y-0.5 hover:bg-emerald-400/40 transition shadow-lg hover:shadow-emerald-400/40">
+              ☀️ Solar Setup <span className="ml-2 inline-block group-hover:translate-x-1 transition">→</span>
+            </button>
+          </Link>
+
+          <Link href="/map" onClick={() => dispatch(setHarvesting(false))}>
+            <button className="group rounded-2xl border border-emerald-300/60 bg-emerald-400/30 px-6 py-3 text-sm font-semibold backdrop-blur-md hover:-translate-y-0.5 hover:bg-emerald-400/40 transition shadow-lg hover:shadow-emerald-400/40">
+              🗺️ Solar Map <span className="ml-2 inline-block group-hover:translate-x-1 transition">→</span>
+            </button>
+          </Link>            <Link href="/map" onClick={() => dispatch(setHarvesting(true))}>
+              <button className="group rounded-2xl border border-cyan-300/60 bg-cyan-400/30 px-6 py-3 text-sm font-semibold backdrop-blur-md hover:-translate-y-0.5 hover:bg-cyan-400/40 transition shadow-lg hover:shadow-cyan-400/40">
+                💧 Rainwater Harvesting <span className="ml-2 inline-block group-hover:translate-x-1 transition">→</span>
               </button>
             </Link>
 
-            <Link href="/map" onClick={() => dispatch(setHarvesting(true))}>
-              <button className="group rounded-2xl border border-cyan-300/60 bg-cyan-400/30 px-6 py-3 text-sm font-semibold backdrop-blur-md hover:-translate-y-0.5 hover:bg-cyan-400/40 transition shadow-lg hover:shadow-cyan-400/40">
-                💧 Rainwater Harvesting <span className="ml-2 inline-block group-hover:translate-x-1 transition">→</span>
+            <Link href="/rainwater-input">
+              <button className="group rounded-2xl border border-blue-300/60 bg-blue-400/30 px-6 py-3 text-sm font-semibold backdrop-blur-md hover:-translate-y-0.5 hover:bg-blue-400/40 transition shadow-lg hover:shadow-blue-400/40">
+                🏠 RWH Setup <span className="ml-2 inline-block group-hover:translate-x-1 transition">→</span>
+              </button>
+            </Link>
+
+            <Link href="/suggestions">
+              <button className="group rounded-2xl border border-yellow-300/60 bg-yellow-400/30 px-6 py-3 text-sm font-semibold backdrop-blur-md hover:-translate-y-0.5 hover:bg-yellow-400/40 transition shadow-lg hover:shadow-yellow-400/40">
+                🛒 Equipment Guide <span className="ml-2 inline-block group-hover:translate-x-1 transition">→</span>
               </button>
             </Link>
           </motion.div>
@@ -256,9 +276,41 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3D/Canvas / Existing component slot */}
-       <section className="h-96">
-        <SolarPanel />
+      {/* Solar Animation Section */}
+      <section className="relative py-16 md:py-20">
+        <div className="mx-auto max-w-4xl px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-8"
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-200 via-cyan-200 to-yellow-200 bg-clip-text text-transparent mb-4">
+              Solar Panel Technology
+            </h2>
+            <p className="text-lg text-white/80 max-w-2xl mx-auto">
+              Watch how solar panels harness sunlight and convert it into clean electricity for your home
+            </p>
+          </motion.div>
+          
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="rounded-3xl overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 p-8 shadow-2xl"
+          >
+            <div className="aspect-video w-full max-w-3xl mx-auto">
+              <iframe 
+                src="https://lottie.host/embed/51b67322-2882-42b5-9ad4-326a1b8a08ac/SqulRXHZnI.lottie"
+                className="w-full h-full rounded-2xl"
+                style={{ border: 'none' }}
+                title="Solar Panel Animation"
+              />
+            </div>
+          </motion.div>
+        </div>
       </section>
         
  
