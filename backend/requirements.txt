@@ -36,3 +36,6 @@ pydantic==2.10.2
 
 # CORS support
 python-dotenv==1.0.0
+
+#AWS
+mangum

@@ -3,9 +3,12 @@ FastAPI application for Neolectra Backend Services
 Provides APIs for rainwater harvesting and comprehensive solar power analysis with BESCOM integration.
 """
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Query
+import traceback
+from urllib.parse import parse_qs
+from fastapi import FastAPI, HTTPException, UploadFile, File, Query, logger
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from mangum import Mangum
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 import io
@@ -529,6 +532,123 @@ async def internal_error_handler(request, exc):
             "detail": "An unexpected error occurred while processing your request"
         }
     )
+
+
+# --------------------------------------------
+# Mangum & Lambda Handler for AWS Lambda+API Gateway 
+# --------------------------------------------
+def fix_query_string(event):
+    logger.info("Fixing query string in the event object.")
+    logger.debug(f"Original Event: {json.dumps(event, indent=2)}")
+    raw_query_string = event.get("rawQueryString", "")
+    query_params = event.get("queryStringParameters", {}) or {}
+    if isinstance(query_params, str):
+        try:
+            query_params = json.loads(query_params)
+            logger.info("Parsed queryStringParameters as JSON string.")
+        except json.JSONDecodeError:
+            logger.error("queryStringParameters could not be parsed as JSON. Using empty params.")
+            query_params = {}
+    if not query_params and raw_query_string:
+        try:
+            query_params = {k: v[0] for k, v in parse_qs(raw_query_string).items()}
+            logger.info("Parsed rawQueryString successfully.")
+        except Exception as e:
+            logger.error(f"Failed to parse rawQueryString: {e}")
+            query_params = {}
+    if "parent_id" in query_params and isinstance(query_params["parent_id"], list):
+        query_params["parent_id"] = query_params["parent_id"][0]
+        logger.debug("Converted parent_id from list to string.")
+    logger.debug(f"Final Query Parameters: {query_params}")
+    event["queryStringParameters"] = query_params
+    return event
+
+class CustomMangum(Mangum):
+    def __call__(self, event, context):
+        logger.debug("CustomMangum - Before fixing query parameters.")
+        logger.debug(f"Original queryStringParameters: {event.get('queryStringParameters', {})}")
+        event = fix_query_string(event)
+        if "queryStringParameters" in event:
+            raw_query_string = "&".join(
+                f"{k}={v}" for k, v in event["queryStringParameters"].items()
+            )
+            event["rawQueryString"] = raw_query_string
+            logger.debug(f"Injected rawQueryString: {raw_query_string}")
+        logger.debug("CustomMangum - After fixing query parameters.")
+        logger.debug(f"Updated queryStringParameters: {event.get('queryStringParameters', {})}")
+        return super().__call__(event, context)
+
+handler = CustomMangum(app, lifespan="off")
+
+def lambda_handler(event, context):
+    logger.info("Lambda Handler Invoked.")
+    try:
+        logger.info(f"FULL RAW EVENT: {json.dumps(event, indent=2)}")
+
+        def fix_query_params(evt):
+            query_params = evt.get("queryStringParameters", {}) or {}
+            if isinstance(query_params, str):
+                try:
+                    query_params = json.loads(query_params)
+                    logger.info("queryStringParameters parsed as JSON string.")
+                except json.JSONDecodeError:
+                    logger.error("Failed to parse queryStringParameters as JSON.")
+                    query_params = {}
+            raw_query_string = evt.get("rawQueryString", "")
+            if not query_params and raw_query_string:
+                try:
+                    query_params = {k: v[0] for k, v in parse_qs(raw_query_string).items()}
+                    logger.info("rawQueryString parsed successfully.")
+                except Exception as e:
+                    logger.error(f"Failed to parse rawQueryString: {e}")
+                    query_params = {}
+            return query_params
+
+        if event.get('headers') is None:
+            event['headers'] = {}
+            logger.debug("Initialized empty headers in the event.")
+
+        query_params = fix_query_params(event)
+        logger.info(f"Processed Query Parameters: {json.dumps(query_params, indent=2)}")
+
+        mangum_event = {
+            'version': '2.0',
+            'routeKey': f"{event.get('httpMethod', '')} {event.get('path', '')}",
+            'rawPath': event.get('path', ''),
+            'rawQueryString': event.get("rawQueryString", ""),
+            'queryStringParameters': query_params,
+            'headers': event.get('headers', {}),
+            'requestContext': {
+                'http': {
+                    'method': event.get('httpMethod', ''),
+                    'path': event.get('path', ''),
+                    'sourceIp': event.get('requestContext', {}).get('identity', {}).get('sourceIp', '127.0.0.1'),
+                    'protocol': 'HTTP/1.1'
+                }
+            },
+            'body': event.get('body', '') or '',
+            'isBase64Encoded': event.get('isBase64Encoded', False)
+        }
+
+        response = handler(mangum_event, context)
+        logger.info(f"Lambda Handler - Response Status Code: {response.get('statusCode')}")
+        logger.debug(f"Lambda Handler - Response Body: {response.get('body')}")
+        return response
+
+    except Exception as e:
+        logger.error(f"Lambda Handler Error: {str(e)}", exc_info=True)
+        logger.error(f"Full Event Details: {json.dumps(event, indent=2)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({
+                'error': 'Internal Server Error',
+                'message': str(e)
+            }),
+            'headers': {
+                'Content-Type': 'application/json'
+            }
+        }
 
 if __name__ == "__main__":
     uvicorn.run(

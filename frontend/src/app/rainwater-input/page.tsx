@@ -3,6 +3,17 @@
 import styles from "./page.module.css";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { apiService, RainwaterAnalysisResponse } from "../../lib/api";
+
+// Define RoofType locally
+interface RoofType {
+  value: string;
+  label: string;
+  coefficient?: number;
+}
+import { getCurrentLocation } from "../../lib/utils";
+import RainwaterResultsDisplay from "../../components/RainwaterResultsDisplay";
+import Loading from "../../components/Loading";
 
 export default function RainwaterInput() {
   const [roofDetails, setRoofDetails] = useState({
@@ -31,6 +42,14 @@ export default function RainwaterInput() {
     address: ""
   });
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResults, setAnalysisResults] = useState<RainwaterAnalysisResponse | null>(null);
+  const [error, setError] = useState<string>("");
+  const [roofTypes, setRoofTypes] = useState<RoofType[]>([]);
+  const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
+
   // Calculate roof area when dimensions change
   useEffect(() => {
     const lengthNum = parseFloat(roofDetails.length);
@@ -47,22 +66,113 @@ export default function RainwaterInput() {
     }
   }, [roofDetails.length, roofDetails.width, roofDetails.accuracy]);
 
+  // Get roof types and current location when component mounts
+  useEffect(() => {
+    const fetchRoofTypes = async () => {
+      try {
+        const response = await apiService.getRoofTypes();
+        setRoofTypes(response.roof_types);
+      } catch (error) {
+        console.error("Failed to fetch roof types:", error);
+      }
+    };
+
+    const getLocation = async () => {
+      try {
+        const location = await getCurrentLocation();
+        setCurrentLocation(location);
+        setLocationData(prev => ({
+          ...prev,
+          latitude: location.lat.toString(),
+          longitude: location.lng.toString()
+        }));
+      } catch (error) {
+        console.log("Could not get location:", error);
+      }
+    };
+
+    fetchRoofTypes();
+    getLocation();
+  }, []);
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+      setError("");
+    }
+  };
+
+  const handleAnalyze = async () => {
+    if (!imageFile) {
+      setError("Please upload a roof image first");
+      return;
+    }
+
+    if (!locationData.latitude || !locationData.longitude) {
+      setError("Please provide location coordinates");
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setError("");
+
+    try {
+      const params = {
+        lat: parseFloat(locationData.latitude),
+        lon: parseFloat(locationData.longitude),
+        roof_type: roofDetails.type,
+        collection_efficiency: harvestingConfig.collectionEfficiency / 100,
+        first_flush_mm: harvestingConfig.firstFlushMM,
+        monthly_demand_liters: harvestingConfig.monthlyDemand,
+        connection_type: harvestingConfig.connectionType,
+        ...(tankConfig.enabled && { tank_capacity_liters: tankConfig.capacity })
+      };
+
+      const results = await apiService.analyzeRainwater(imageFile, params);
+      setAnalysisResults(results);
+    } catch (error: any) {
+      console.error("Analysis failed:", error);
+      setError(
+        error.response?.data?.detail || 
+        error.message || 
+        "Failed to analyze rainwater harvesting potential. Please try again."
+      );
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const handleSave = () => {
     const rainwaterData = {
       roof: roofDetails,
       harvesting: harvestingConfig,
       tank: tankConfig,
-      location: locationData
+      location: locationData,
+      imageFile: imageFile?.name || null,
+      timestamp: new Date().toISOString()
     };
     
     console.log("Rainwater Harvesting Data:", rainwaterData);
     
-    // You can store this data in localStorage, send to API, or navigate to results
+    // Store data in localStorage
     localStorage.setItem('rainwaterHarvestingData', JSON.stringify(rainwaterData));
-    
-    // Navigate to results or next step
-    // router.push('/rainwater-results');
   };
+
+  // If we have analysis results, show the results page
+  if (analysisResults) {
+    return (
+      <RainwaterResultsDisplay 
+        results={analysisResults} 
+        onBack={() => setAnalysisResults(null)}
+      />
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -74,9 +184,40 @@ export default function RainwaterInput() {
         <p className={styles.subtitle}>Configure your rainwater collection system</p>
       </div>
 
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-4 mb-6 text-red-300">
+          {error}
+        </div>
+      )}
+
+      {/* Image Upload Section */}
+      <div className={styles.formGroup}>
+        <label>📸 Upload Roof Image *</label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className={styles.fileInput}
+          required
+        />
+        {imagePreview && (
+          <div className="mt-4">
+            <img 
+              src={imagePreview} 
+              alt="Roof preview" 
+              className="max-w-xs rounded-lg shadow-lg"
+            />
+          </div>
+        )}
+        <p className="text-sm text-gray-400 mt-2">
+          Upload a clear aerial or top-down view of your roof for accurate area detection
+        </p>
+      </div>
+
       {/* Location Details */}
       <div className={styles.formGroup}>
-        <label>📍 Location Information</label>
+        <label>📍 Location Information *</label>
         <input
           type="text"
           placeholder="Enter your address"
@@ -87,19 +228,24 @@ export default function RainwaterInput() {
         <div className={styles.dimensionsRow}>
           <input
             type="text"
-            placeholder="Latitude"
+            placeholder="Latitude *"
             value={locationData.latitude}
             onChange={(e) => setLocationData({...locationData, latitude: e.target.value})}
             className={styles.input}
+            required
           />
           <input
             type="text"
-            placeholder="Longitude"
+            placeholder="Longitude *"
             value={locationData.longitude}
             onChange={(e) => setLocationData({...locationData, longitude: e.target.value})}
             className={styles.input}
+            required
           />
         </div>
+        <p className="text-sm text-gray-400 mt-2">
+          Location is required for rainfall data. {currentLocation && "Current location detected automatically."}
+        </p>
       </div>
 
       {/* Roof Details */}
@@ -110,17 +256,17 @@ export default function RainwaterInput() {
           value={roofDetails.type}
           onChange={(e) => setRoofDetails({...roofDetails, type: e.target.value})}
         >
-          <option value="concrete">Concrete (Runoff: 80%)</option>
-          <option value="tile">Clay/Ceramic Tile (Runoff: 70%)</option>
-          <option value="metal">Metal Sheet (Runoff: 90%)</option>
-          <option value="cgi">Corrugated Iron (Runoff: 90%)</option>
-          <option value="asbestos">Asbestos (Runoff: 80%)</option>
+          {roofTypes.map((type) => (
+            <option key={type.value} value={type.value}>
+              {type.label} {type.coefficient && `(Runoff: ${(type.coefficient * 100).toFixed(0)}%)`}
+            </option>
+          ))}
         </select>
       </div>
 
-      {/* Roof Dimensions */}
+      {/* Roof Dimensions - Optional for reference */}
       <div className={styles.formGroup}>
-        <label>📏 Roof Dimensions</label>
+        <label>📏 Roof Dimensions (Optional - for reference)</label>
         <select
           value={roofDetails.accuracy}
           onChange={(e) => setRoofDetails({...roofDetails, accuracy: e.target.value})}
@@ -152,6 +298,9 @@ export default function RainwaterInput() {
           readOnly
           className={styles.areaInput}
         />
+        <p className="text-sm text-gray-400 mt-2">
+          These dimensions are optional. The system will automatically detect roof area from the uploaded image.
+        </p>
       </div>
 
       {/* Collection Efficiency */}
@@ -238,9 +387,25 @@ export default function RainwaterInput() {
 
       {/* Action Buttons */}
       <div className={styles.buttonGroup}>
+        <button 
+          onClick={handleAnalyze} 
+          disabled={!imageFile || !locationData.latitude || !locationData.longitude || isAnalyzing}
+          className={`${styles.analyzeButton} ${(!imageFile || !locationData.latitude || !locationData.longitude || isAnalyzing) ? 'opacity-50 cursor-not-allowed' : ''}`}
+        >
+          {isAnalyzing ? (
+            <div className="flex items-center gap-2">
+              <Loading />
+              <span>Analyzing Rainwater Potential...</span>
+            </div>
+          ) : (
+            '🔍 Analyze Rainwater Potential'
+          )}
+        </button>
+
         <button onClick={handleSave} className={styles.saveButton}>
           💾 Save Configuration
         </button>
+
         <Link href="/map">
           <button className={styles.mapButton}>
             🗺️ View on Map
@@ -256,6 +421,7 @@ export default function RainwaterInput() {
           <li>Bangalore receives ~900mm annual rainfall</li>
           <li>A 100m² roof can harvest ~72,000L annually</li>
           <li>RWH can reduce water bills by 30-50%</li>
+          <li>Mandatory for plots {'>'}60x40 feet in Bangalore</li>
         </ul>
       </div>
     </div>

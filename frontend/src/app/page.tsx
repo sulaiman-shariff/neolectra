@@ -193,9 +193,9 @@ export default function Home() {
             transition={{ delay: 0.25, duration: 0.8 }}
             className="mt-10 flex flex-wrap items-center justify-center gap-4"
           >
-          <Link href="/userinput">
+          <Link href="/map" onClick={() => dispatch(setHarvesting(false))}>
             <button className="group rounded-2xl border border-emerald-300/60 bg-emerald-400/30 px-6 py-3 text-sm font-semibold backdrop-blur-md hover:-translate-y-0.5 hover:bg-emerald-400/40 transition shadow-lg hover:shadow-emerald-400/40">
-              ☀️ Solar Setup <span className="ml-2 inline-block group-hover:translate-x-1 transition">→</span>
+              ☀️ Solar Analysis <span className="ml-2 inline-block group-hover:translate-x-1 transition">→</span>
             </button>
           </Link>
 

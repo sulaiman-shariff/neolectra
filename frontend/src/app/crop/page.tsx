@@ -4,9 +4,9 @@ import ReactLassoSelect, { getCanvas } from "react-lasso-select";
 import { useEffect, useState } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { MdDeleteOutline } from "react-icons/md";
-import { useAppDispatch, useAppSelector } from "@/components/reduxHooks";
+import { useAppDispatch, useAppSelector } from "../../components/reduxHooks";
 import Link from "next/link";
-import { processImage, saveCrop } from "@/components/UISlice";
+import { processImage, saveCrop } from "../../components/UISlice";
 import { useRouter } from "next/navigation";
 export default function Crop() {
   const router = useRouter();
@@ -32,23 +32,37 @@ export default function Crop() {
             />
           </div>
           <>
-            <div className={styles.guidenceContainer}>Please mark points over the roof to select</div>
+            <div className={styles.guidenceContainer}>
+              {clippedImg 
+                ? "Roof area selected! Click Next to continue with solar analysis."
+                : "Please mark points over the roof to select the area for analysis"
+              }
+            </div>
             <div className={styles.buttonContainer}>
               <button onClick={() => setClippedImg(undefined)} className={styles.clearButton}>
                 <span style={{ marginLeft: "10px" }}>Clear</span>
                 <MdDeleteOutline className={styles.clearBoxIcon} />
               </button>
- <Link href={"/userinput"}>
-  <button
-    onClick={() => {
-      dispatch(saveCrop(clippedImg));
-    }}
-    className={styles.nextButton}
-  >
-    <span style={{ marginRight: "25px" }}>Next</span>
-    <FaArrowRight className={styles.nextBoxIcon} />
-  </button>
-</Link>
+              <button
+                onClick={() => {
+                  if (clippedImg) {
+                    console.log('Saving crop data:', clippedImg);
+                    dispatch(saveCrop(clippedImg));
+                    // Small delay to ensure Redux state is updated before navigation
+                    setTimeout(() => {
+                      console.log('Navigating to userinput');
+                      router.push("/userinput");
+                    }, 200);
+                  } else {
+                    alert('Please select an area on the roof first');
+                  }
+                }}
+                className={`${styles.nextButton} ${!clippedImg ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!clippedImg}
+              >
+                <span style={{ marginRight: "25px" }}>Next</span>
+                <FaArrowRight className={styles.nextBoxIcon} />
+              </button>
             </div>
             <div className={styles.ball1}>&nbsp;&nbsp;</div>
             <div className={styles.ball2}>&nbsp;&nbsp;</div>
