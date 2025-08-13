@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 export default function Crop() {
   const router = useRouter();
   const screenshot = useAppSelector((state: any) => state.uislice.currentScreenshot);
+  const waterHarvesting = useAppSelector((state: any) => state.uislice.waterHarvesting);
   const [clippedImg, setClippedImg] = useState();
   const dispatch = useAppDispatch();
   return (
@@ -33,10 +34,11 @@ export default function Crop() {
           </div>
           <>
             <div className={styles.guidenceContainer}>
-              {clippedImg 
-                ? "Roof area selected! Click Next to continue with solar analysis."
-                : "Please mark points over the roof to select the area for analysis"
-              }
+              {clippedImg
+                ? waterHarvesting
+                  ? "Roof area selected! Click Next to continue with rainwater setup."
+                  : "Roof area selected! Click Next to continue with solar analysis."
+                : "Please mark points over the roof to select the area for analysis"}
             </div>
             <div className={styles.buttonContainer}>
               <button onClick={() => setClippedImg(undefined)} className={styles.clearButton}>
@@ -50,8 +52,8 @@ export default function Crop() {
                     dispatch(saveCrop(clippedImg));
                     // Small delay to ensure Redux state is updated before navigation
                     setTimeout(() => {
-                      console.log('Navigating to userinput');
-                      router.push("/userinput");
+                      console.log('Navigating to next step');
+                      router.push(waterHarvesting ? "/rainwater-input" : "/userinput");
                     }, 200);
                   } else {
                     alert('Please select an area on the roof first');

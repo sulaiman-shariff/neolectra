@@ -11,11 +11,16 @@ interface RoofType {
   label: string;
   coefficient?: number;
 }
-import { getCurrentLocation } from "../../lib/utils";
+import { dataURLtoFile, getCurrentLocation } from "../../lib/utils";
 import RainwaterResultsDisplay from "../../components/RainwaterResultsDisplay";
 import Loading from "../../components/Loading";
+import { useAppSelector } from "../../components/reduxHooks";
 
 export default function RainwaterInput() {
+  const croppedImage = useAppSelector((state) => state.uislice.croppedScreenshot);
+  const savedLat = useAppSelector((state) => state.uislice.lat);
+  const savedLng = useAppSelector((state) => state.uislice.lng);
+  const savedAddress = useAppSelector((state) => state.uislice.add);
   const [roofDetails, setRoofDetails] = useState({
     length: "",
     width: "",
@@ -79,13 +84,23 @@ export default function RainwaterInput() {
 
     const getLocation = async () => {
       try {
-        const location = await getCurrentLocation();
-        setCurrentLocation(location);
-        setLocationData(prev => ({
-          ...prev,
-          latitude: location.lat.toString(),
-          longitude: location.lng.toString()
-        }));
+        if (typeof savedLat === "number" && typeof savedLng === "number") {
+          setCurrentLocation({ lat: savedLat, lng: savedLng });
+          setLocationData(prev => ({
+            ...prev,
+            latitude: String(savedLat),
+            longitude: String(savedLng),
+            address: savedAddress || prev.address,
+          }));
+        } else {
+          const location = await getCurrentLocation();
+          setCurrentLocation(location);
+          setLocationData(prev => ({
+            ...prev,
+            latitude: location.lat.toString(),
+            longitude: location.lng.toString()
+          }));
+        }
       } catch (error) {
         console.log("Could not get location:", error);
       }
@@ -94,6 +109,19 @@ export default function RainwaterInput() {
     fetchRoofTypes();
     getLocation();
   }, []);
+
+  // If arriving from crop flow, prefill imageFile from cropped screenshot
+  useEffect(() => {
+    if (croppedImage && !imageFile) {
+      try {
+        const file = dataURLtoFile(croppedImage as any, "roof.jpg");
+        setImageFile(file);
+        setImagePreview(croppedImage as any);
+      } catch (e) {
+        console.log("Failed to load cropped image:", e);
+      }
+    }
+  }, [croppedImage]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

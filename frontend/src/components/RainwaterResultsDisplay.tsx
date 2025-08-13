@@ -37,25 +37,23 @@ const RainwaterResultsDisplay: React.FC<RainwaterResultsDisplayProps> = ({
   const collectionEfficiency =
     summary?.roof?.collection_efficiency ?? 0.9;
 
-  // Peak month (safe)
+  // Peak month by captured liters (safe)
   const peakMonth =
     monthlyData.length > 0
       ? monthlyData.reduce((prev, current) =>
-          (prev?.harvestable_liters ?? 0) > (current?.harvestable_liters ?? 0)
+          (prev?.captured_liters ?? 0) > (current?.captured_liters ?? 0)
             ? prev
             : current
         )
       : {
           month: "N/A",
-          harvestable_liters: 0,
-          rainfall_mm: 0,
-          demand_liters: 0,
-          surplus_deficit: 0,
+          captured_liters: 0,
+          rain_mm: 0,
         };
 
   // Wet / dry season classification (>50mm considered wet as in original UI)
-  const wetSeason = monthlyData.filter((m) => (m?.rainfall_mm ?? 0) > 50);
-  const drySeason = monthlyData.filter((m) => (m?.rainfall_mm ?? 0) < 50);
+  const wetSeason = monthlyData.filter((m) => (m?.rain_mm ?? 0) > 50);
+  const drySeason = monthlyData.filter((m) => (m?.rain_mm ?? 0) < 50);
 
   // percentage of demand met if demand is provided, otherwise fallback to provided percent
   const percentageDemandMet = null; // This data is not available in the current API structure
@@ -347,15 +345,15 @@ const RainwaterResultsDisplay: React.FC<RainwaterResultsDisplayProps> = ({
                   <div className="text-sm text-gray-300">Roof Area (m²)</div>
                   <div className="text-xs text-gray-400">Catchment area</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-cyan-400">
-                    {formatNumber(
-                      monthlyData.reduce((total, month) => total + (month?.rainfall_mm ?? 0), 0)
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-300">Annual Rainfall (mm)</div>
-                  <div className="text-xs text-gray-400">Local precipitation</div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-cyan-400">
+                  {formatNumber(
+                    monthlyData.reduce((total, month) => total + (month?.rain_mm ?? 0), 0)
+                  )}
                 </div>
+                <div className="text-sm text-gray-300">Annual Rainfall (mm)</div>
+                <div className="text-xs text-gray-400">Local precipitation</div>
+              </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-green-400">
                     {formatNumber(totalHarvestable)}
@@ -418,11 +416,13 @@ const RainwaterResultsDisplay: React.FC<RainwaterResultsDisplayProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="text-center p-4 bg-blue-500/20 rounded-lg">
                   <div className="text-2xl font-bold text-blue-300">
-                    {peakMonth.month}
+                    {typeof peakMonth?.month === "string"
+                      ? new Date(peakMonth.month).toLocaleString("en-US", { month: "short", year: "numeric" })
+                      : String(peakMonth?.month ?? "N/A")}
                   </div>
                   <div className="text-sm text-gray-300">Peak Harvest Month</div>
                   <div className="text-xs text-gray-400">
-                    {formatNumber(peakMonth.harvestable_liters ?? 0)}L
+                    {formatNumber(peakMonth.captured_liters ?? 0)}L
                   </div>
                 </div>
                 <div className="text-center p-4 bg-yellow-500/20 rounded-lg">
@@ -448,31 +448,28 @@ const RainwaterResultsDisplay: React.FC<RainwaterResultsDisplayProps> = ({
                     <tr className="border-b border-white/20">
                       <th className="text-left p-2">Month</th>
                       <th className="text-center p-2">Rainfall (mm)</th>
-                      <th className="text-center p-2">Harvestable (L)</th>
-                      <th className="text-center p-2">Demand (L)</th>
-                      <th className="text-center p-2">Balance</th>
+                      <th className="text-center p-2">Harvested (L)</th>
+                      <th className="text-center p-2">Offset (L)</th>
+                      <th className="text-center p-2">Unmet Demand (L)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {monthlyData.map((month, index) => (
                       <tr key={index} className="border-b border-white/10">
-                        <td className="p-2 font-medium">{month.month ?? `M${index + 1}`}</td>
-                        <td className="p-2 text-center">{month.rainfall_mm ?? 0}</td>
+                        <td className="p-2 font-medium">
+                          {typeof month.month === "string"
+                            ? new Date(month.month).toLocaleString("en-US", { month: "short", year: "numeric" })
+                            : `M${index + 1}`}
+                        </td>
+                        <td className="p-2 text-center">{month.rain_mm ?? 0}</td>
                         <td className="p-2 text-center text-cyan-300">
-                          {formatNumber(month.harvestable_liters ?? 0)}
+                          {formatNumber(month.captured_liters ?? 0)}
                         </td>
                         <td className="p-2 text-center text-orange-300">
-                          {formatNumber(month.demand_liters ?? 0)}
+                          {formatNumber(month.offset_liters ?? 0)}
                         </td>
-                        <td
-                          className={`p-2 text-center font-medium ${
-                            (month.surplus_deficit ?? 0) >= 0
-                              ? "text-green-300"
-                              : "text-red-300"
-                          }`}
-                        >
-                          {(month.surplus_deficit ?? 0) >= 0 ? "+" : ""}
-                          {formatNumber(month.surplus_deficit ?? 0)}
+                        <td className="p-2 text-center text-red-300">
+                          {formatNumber(month.unmet_demand_liters ?? 0)}
                         </td>
                       </tr>
                     ))}
@@ -586,7 +583,7 @@ const RainwaterResultsDisplay: React.FC<RainwaterResultsDisplayProps> = ({
                 <div className="flex justify-between">
                   <span className="text-gray-300">Average monthly rainfall:</span>
                   <span className="font-semibold">
-                    {(monthlyData.reduce((total, month) => total + (month?.rainfall_mm ?? 0), 0) / 12).toFixed(1)}mm
+                    {(monthlyData.reduce((total, month) => total + (month?.rain_mm ?? 0), 0) / 12).toFixed(1)}mm
                   </span>
                 </div>
                 <div className="flex justify-between">

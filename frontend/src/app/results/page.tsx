@@ -7,6 +7,9 @@ import Link from "next/link";
 import { FaArrowRight } from "react-icons/fa";
 import { saveProcessed, setWaterData } from "@/components/UISlice";
 import Loading from "@/components/Loading";
+import RainwaterResultsDisplay from "../../components/RainwaterResultsDisplay";
+import { apiService, RainwaterAnalysisResponse } from "@/lib/api";
+import { dataURLtoFile } from "@/lib/utils";
 
 export default function Results() {
   const screenshot = useAppSelector((state) => state.uislice.currentScreenshot);
@@ -23,38 +26,35 @@ export default function Results() {
   const waterData = useAppSelector((state) => state.uislice.waterData);
 
   const dispatch = useAppDispatch();
+  const [rainwaterResults, setRainwaterResults] = useState<RainwaterAnalysisResponse | null>(null);
+  const [isAnalyzingRain, setIsAnalyzingRain] = useState<boolean>(false);
 
   async function getWaterImage() {
-    let data = new FormData();
-    let res = await fetch(clippedImg);
-    let blobs = await res.blob();
-    let imgFile = new File([blobs], "cropp", { type: "image/jpeg" });
-    data.append("image", imgFile);
-    data.append("zoomLevel", `${zoomLevel}`);
-    data.append("lat", `${lat}`);
-    data.append("long", `${lng}`);
-    axios
-      .post("http://127.0.0.1:8000/rainwater", data, {
-        headers: {
-          accept: "application/json",
-          "Accept-Language": "en-US,en;q=0.8",
-          "Content-Type": `multipart/form-data`,
-        },
-      })
-      .then((response) => {
-        console.log(response);
-        //@ts-ignore
-        setFinalImg("data:image/jpeg;base64," + response?.data?.image);
-        //@ts-ignore
-        setProcessedArea(response?.data?.area);
-        dispatch(setWaterData(response.data));
-        dispatch(saveProcessed({ processedArea: response?.data?.area, processedImg: response?.data?.image }));
-        return response;
-      })
-      .catch((error: any) => {
-        console.log(error);
-        return null;
-      });
+    try {
+      setIsAnalyzingRain(true);
+      const sourceDataUrl = screenshot || clippedImg;
+      if (!sourceDataUrl) {
+        throw new Error("No image available for rainwater analysis");
+      }
+      const imgFile = dataURLtoFile(sourceDataUrl, "roof.jpg");
+      const params = {
+        lat: Number(lat),
+        lon: Number(lng),
+        roof_type: "concrete",
+        collection_efficiency: 0.9,
+        first_flush_mm: 1.5,
+        monthly_demand_liters: 32000,
+        connection_type: "domestic",
+      } as const;
+
+      const results = await apiService.analyzeRainwater(imgFile, params);
+      setRainwaterResults(results);
+      dispatch(setWaterData(results));
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsAnalyzingRain(false);
+    }
   }
 
   async function getSolarImage() {
@@ -95,6 +95,34 @@ export default function Results() {
       getSolarImage();
     }
   }, []);
+
+  if (waterHarvesting) {
+    if (rainwaterResults) {
+      return (
+        <RainwaterResultsDisplay
+          results={rainwaterResults}
+          onBack={() => setRainwaterResults(null)}
+        />
+      );
+    }
+    return (
+      <div className={styles.container}>
+        <img className={styles.bgimg} src={screenshot} alt="ddd" />
+        <div className={styles.innerContainer}>
+          <div className={styles.leftResults}>
+            <div className={styles.imageBox}>
+              <span className={styles.title}>Original</span>
+              <img className={styles.original} src={screenshot || clippedImg || ""} alt="ss" />
+            </div>
+            <div className={styles.imageBox}>
+              <span className={styles.title}>Analyzing</span>
+              <span><Loading /></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>

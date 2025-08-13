@@ -36,20 +36,21 @@ export default function UserInput() {
   const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
   const [fromCropFlow, setFromCropFlow] = useState(false);
 
-  // Check if we're coming from the crop flow (have cropped image and location)
+  // Check if we're coming from the crop flow (have cropped image; location optional)
   useEffect(() => {
     console.log('userinput: Checking crop flow data:', { croppedImage: !!croppedImage, savedLat, savedLng });
     
-    if (croppedImage && savedLat !== null && savedLng !== null) {
+    if (croppedImage) {
       console.log('userinput: Setting up crop flow data');
       setFromCropFlow(true);
       setImagePreview(croppedImage);
-      setCurrentLocation({ lat: savedLat, lng: savedLng });
-      
+      if (savedLat !== null && savedLng !== null) {
+        setCurrentLocation({ lat: savedLat, lng: savedLng });
+      }
       // Convert the base64 cropped image to a File object
       const file = dataURLtoFile(croppedImage, "cropped-roof.png");
       setImageFile(file);
-    } else if (croppedImage === null && savedLat === null && savedLng === null) {
+    } else if (croppedImage === null) {
       // Only redirect if we're sure there's no data (all null, not undefined)
       console.log('userinput: No crop flow data found, redirecting to map');
       router.push('/map');
@@ -72,9 +73,9 @@ export default function UserInput() {
     }
   }, [plotDetails.length, plotDetails.width, plotDetails.accuracy]);
 
-  // Get current location when component mounts (fallback if not from crop flow)
+  // Get current location when component mounts if not already set
   useEffect(() => {
-    if (!fromCropFlow && !currentLocation) {
+    if (!currentLocation) {
       getCurrentLocation()
         .then((location: {lat: number, lng: number}) => {
           setCurrentLocation(location);
@@ -83,7 +84,7 @@ export default function UserInput() {
           console.log("Could not get location:", error);
         });
     }
-  }, [fromCropFlow, currentLocation]);
+  }, [currentLocation]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -126,11 +127,17 @@ export default function UserInput() {
       setAnalysisResults(results);
     } catch (error: any) {
       console.error("Analysis failed:", error);
-      setError(
-        error.response?.data?.detail || 
-        error.message || 
-        "Failed to analyze solar potential. Please try again."
-      );
+      // Normalize possible FastAPI validation errors (422) which can be objects/arrays
+      const detail = error?.response?.data?.detail;
+      let message = error?.message;
+      if (Array.isArray(detail)) {
+        message = detail.map((d: any) => d?.msg || JSON.stringify(d)).join("; ");
+      } else if (detail && typeof detail === "object") {
+        message = detail.msg || JSON.stringify(detail);
+      } else if (typeof detail === "string") {
+        message = detail;
+      }
+      setError(message || "Failed to analyze solar potential. Please try again.");
     } finally {
       setIsAnalyzing(false);
     }

@@ -148,9 +148,9 @@ export default function Home() {
               {item.label}
             </button>
           ))}
-          <Link href="/map" className="ml-2">
+          <Link href="/map" className="ml-2" onClick={() => dispatch(setHarvesting(false))}>
             <button className="text-xs sm:text-sm px-3 py-1 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 hover:from-emerald-300 hover:to-cyan-300 transition shadow-lg">
-              Explore Map
+              Start Solar Analysis
             </button>
           </Link>
           <Link href="/suggestions" className="ml-2">
@@ -199,11 +199,7 @@ export default function Home() {
             </button>
           </Link>
 
-          <Link href="/map" onClick={() => dispatch(setHarvesting(false))}>
-            <button className="group rounded-2xl border border-emerald-300/60 bg-emerald-400/30 px-6 py-3 text-sm font-semibold backdrop-blur-md hover:-translate-y-0.5 hover:bg-emerald-400/40 transition shadow-lg hover:shadow-emerald-400/40">
-              🗺️ Solar Map <span className="ml-2 inline-block group-hover:translate-x-1 transition">→</span>
-            </button>
-          </Link>            <Link href="/map" onClick={() => dispatch(setHarvesting(true))}>
+          <Link href="/map" onClick={() => dispatch(setHarvesting(true))}>
               <button className="group rounded-2xl border border-cyan-300/60 bg-cyan-400/30 px-6 py-3 text-sm font-semibold backdrop-blur-md hover:-translate-y-0.5 hover:bg-cyan-400/40 transition shadow-lg hover:shadow-cyan-400/40">
                 💧 Rainwater Harvesting <span className="ml-2 inline-block group-hover:translate-x-1 transition">→</span>
               </button>
