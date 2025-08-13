@@ -13,32 +13,32 @@ export default function UserInput() {
   });
   const [roofCoverage, setRoofCoverage] = useState(50);
 
-  // Automatically update area when length or width changes
   useEffect(() => {
-    const lengthNum = parseFloat(plotDetails.length);
-    const widthNum = parseFloat(plotDetails.width);
+    const lengthNum = parseFloat(plotDetails.length); // Always in meters
+    const widthNum = parseFloat(plotDetails.width); // Always in meters
+
     if (!isNaN(lengthNum) && !isNaN(widthNum)) {
-      setPlotDetails((prev) => ({ ...prev, area: (lengthNum * widthNum).toString() }));
+      let area = lengthNum * widthNum;
+      if (plotDetails.accuracy === "approximate") {
+        area = area * 1.05;
+      }
+      setPlotDetails((prev) => ({ ...prev, area: area.toFixed(2) }));
     } else {
       setPlotDetails((prev) => ({ ...prev, area: "" }));
     }
-  }, [plotDetails.length, plotDetails.width]);
+  }, [plotDetails.length, plotDetails.width, plotDetails.accuracy]);
 
   const handleSave = () => {
-    console.log({
-      panelDetails,
-      plotDetails,
-      roofCoverage,
-    });
-    // Add navigation or state dispatch logic here
+    console.log({ panelDetails, plotDetails, roofCoverage });
   };
 
   return (
     <div className={styles.container}>
-      <h1>User Input</h1>
+      <h1 className={styles.title}>Solar Panel Setup</h1>
 
+      {/* Panel Details */}
       <div className={styles.formGroup}>
-        <label>Panel Details</label>
+        <label>Panel Type</label>
         <select
           className={styles.dropdown}
           value={panelDetails}
@@ -51,49 +51,56 @@ export default function UserInput() {
         </select>
       </div>
 
+      {/* Plot Details */}
       <div className={styles.formGroup}>
-        <label>Plot Details</label>
-        <input
-          type="text"
-          placeholder="Length"
-          value={plotDetails.length}
-          onChange={(e) =>
-            setPlotDetails({ ...plotDetails, length: e.target.value })
-          }
-        />
-        <input
-          type="text"
-          placeholder="Width"
-          value={plotDetails.width}
-          onChange={(e) =>
-            setPlotDetails({ ...plotDetails, width: e.target.value })
-          }
-        />
-        <input
-          type="text"
-          placeholder="Area"
-          value={plotDetails.area}
-          readOnly // Make area read-only
-        />
+        <label>Roof Dimensions</label>
         <select
           value={plotDetails.accuracy}
           onChange={(e) =>
             setPlotDetails({ ...plotDetails, accuracy: e.target.value })
           }
+          className={styles.accuracyDropdown}
         >
           <option value="exact">Exact</option>
           <option value="approximate">Approximate</option>
         </select>
+        <div className={styles.dimensionsRow}>
+          <input
+            type="text"
+            placeholder="Length (m)"
+            value={plotDetails.length}
+            onChange={(e) =>
+              setPlotDetails({ ...plotDetails, length: e.target.value })
+            }
+          />
+          <input
+            type="text"
+            placeholder="Width (m)"
+            value={plotDetails.width}
+            onChange={(e) =>
+              setPlotDetails({ ...plotDetails, width: e.target.value })
+            }
+          />
+        </div>
+        <input
+          type="text"
+          placeholder="Area (m²)"
+          value={plotDetails.area}
+          readOnly
+          className={styles.areaInput}
+        />
       </div>
 
+      {/* Roof Coverage */}
       <div className={styles.formGroup}>
-        <label>Roof Coverage</label>
+        <label>Roof Coverage: {roofCoverage}%</label>
         <input
           type="range"
           min="0"
           max="100"
           value={roofCoverage}
           onChange={(e) => setRoofCoverage(Number(e.target.value))}
+          className={styles.rangeInput}
         />
       </div>
 
