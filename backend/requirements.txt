@@ -5,7 +5,7 @@ python-multipart==0.0.12
 
 # Image processing
 Pillow==11.0.0
-opencv-python==4.8.1.78
+opencv-python-headless==4.8.1.78
 matplotlib==3.10.0
 numpy==1.26.4
 

@@ -49,19 +49,7 @@ const recommendations = {
       image: "/images/waaree-450.jpg",
       amazonLink: "https://shop.waaree.com/waaree-450wp-144cells-24-volts-mono-perc-solar-module/"
     },
-    {
-      id: 4,
-      name: "Adani Solar (Residential series 400–530W)",
-      brand: "Adani Solar",
-      power: "400–530W (various models)",
-      efficiency: "20.8–21.8%",
-      warranty: "25 years",
-      price: "₹13,000 (typical / model-dependent)",
-      rating: 4.6,
-      features: ["Large Indian manufacturer", "TOPCon / MonoPERC options", "Strong warranty & supply chain"],
-      image: "/images/adani-solar.jpg",
-      amazonLink: "https://www.adanisolar.com/product"
-    }
+   
   ],
   inverters: [
     {
@@ -87,7 +75,7 @@ const recommendations = {
       price: "₹110,000 (approx. — dealer/wholesale reference)",
       rating: 4.5,
       features: ["Hybrid capability", "App monitoring", "Common in Indian rooftop installs"],
-      image: "/images/growatt-5kw.jpg",
+      image: "/images/growatt.png",
       amazonLink: "https://www.tradeindia.com/products/growatt-5kw-48v-spf-5000-es-inverter-c8769863.html"
     },
     {
@@ -100,22 +88,10 @@ const recommendations = {
       price: "₹55,000 (approx. retail)",
       rating: 4.4,
       features: ["Hybrid inverter", "Local service & spares in Bangalore", "Good value for smaller homes"],
-      image: "/images/luminous-tx-5k.jpg",
+      image: "/images/luminousbattery.png",
       amazonLink: "https://www.luminousindia.com/product/solar-hybrid-inverter-tx-5-kva"
     },
-    {
-      id: 4,
-      name: "Fronius Primo (single-phase 5 kW)",
-      brand: "Fronius",
-      power: "5.0 kW",
-      efficiency: "98%+",
-      warranty: "5–10 years (extendable)",
-      price: "₹4,03,000 (import list / distributor price - approx.)",
-      rating: 4.8,
-      features: ["Premium European build", "Excellent monitoring", "High reliability"],
-      image: "/images/fronius-primo.jpg",
-      amazonLink: "https://www.ubuy.co.in/product/15X3W430A-fronius-primo-5-1-phase-2-mppt-primo-5-0-1-solar-inverter"
-    }
+
   ],
   batteries: [
     {
@@ -128,7 +104,7 @@ const recommendations = {
       price: "₹70,000 - ₹1,50,000 (approx. by capacity & config)",
       rating: 4.5,
       features: ["Local support & installation", "Paired with Tata rooftop systems", "Turnkey solutions"],
-      image: "/images/tatapower-battery.jpg",
+      image: "/images/tatapowersolar.png",
       amazonLink: "https://www.tatapowersolar.com/rooftops/residential/"
     },
     {
@@ -141,7 +117,7 @@ const recommendations = {
       price: "₹75,000 - ₹1,25,000 (approx.)",
       rating: 4.4,
       features: ["Li-ion chemistry", "Modular", "Local service network"],
-      image: "/images/luminous-ess.jpg",
+      image: "/images/luminous.png",
       amazonLink: "https://www.luminousindia.com/"
     },
     {
@@ -154,22 +130,10 @@ const recommendations = {
       price: "₹15,000 - ₹60,000 (lead/tubular) or higher for Li-ion packs",
       rating: 4.3,
       features: ["Well-known Indian brand", "Tubular options for solar", "Good local service"],
-      image: "/images/exide-battery.jpg",
+      image: "/images/exide.png",
       amazonLink: "https://exidehome.exidecare.com/"
     },
-    {
-      id: 4,
-      name: "Su-Kam / SuKAM Li-ion & tubular options (popular local choices)",
-      brand: "Su-Kam",
-      capacity: "2.4 kWh – 10 kWh (model dependent)",
-      power: "varies",
-      warranty: "3–7 years",
-      price: "₹18,000 - ₹85,000 (approx. by model)",
-      rating: 4.2,
-      features: ["Long history in Indian backup market", "Multiple chemistry choices"],
-      image: "/images/sukam-battery.jpg",
-      amazonLink: "https://www.su-kam.com/"
-    }
+    
   ],
   accessories: [
     {
@@ -181,7 +145,7 @@ const recommendations = {
       price: "₹6,000 - ₹15,000 / rail (imported/distributor pricing varies)",
       rating: 4.8,
       features: ["Strong structural performance", "Popular with rooftop installs", "Distributor network in India"],
-      image: "/images/ironridge-rail.jpg",
+      image: "/images/ironridge.png",
       amazonLink: "https://www.ironridge.com/"
     },
     {
@@ -193,7 +157,7 @@ const recommendations = {
       price: "₹10,000 - ₹40,000 (depending on spec)",
       rating: 4.5,
       features: ["NEMA/ IP rated options", "Pre-wired for easy install", "Used in Indian installs"],
-      image: "/images/midnite-epanel.jpg",
+      image: "/images/midnite.png",
       amazonLink: "https://www.amazon.in/s?k=midnite+epanel"
     },
     {
@@ -205,21 +169,10 @@ const recommendations = {
       price: "₹20,000 (import list price for P730 - approx.)",
       rating: 4.7,
       features: ["Panel-level MPPT", "Shade mitigation", "Module-level monitoring"],
-      image: "/images/solaredge-optimizer.jpg",
+      image: "/images/solaredge.png",
       amazonLink: "https://www.ubuy.co.in/product/RSVLE096-solaredge-p730-for-2-x-high-power-72-cell-pv-modules"
     },
-    {
-      id: 4,
-      name: "MC4 Solar Connectors (pairs)",
-      brand: "Generic / Multi-Contact",
-      type: "Connectors",
-      warranty: "Varies",
-      price: "₹399 (10 pairs) – typical Amazon listing",
-      rating: 4.5,
-      features: ["Weatherproof IP67", "Industry standard", "Cheap & widely available in Bangalore market"],
-      image: "/images/mc4-connectors.jpg",
-      amazonLink: "https://www.amazon.in/s?k=MC4+Connector"
-    }
+   
   ]
 };
 
@@ -241,10 +194,7 @@ export default function SuggestionsPage() {
       className={styles.productCard}
     >
       <div className={styles.productImage}>
-        <div className={styles.imagePlaceholder}>
-          {/* Replace placeholder with real <img src={product.image} alt={product.name} /> in production */}
-          📷
-        </div>
+        <img src={product.image} alt={product.name} className={styles.productImg} />
       </div>
       
       <div className={styles.productInfo}>

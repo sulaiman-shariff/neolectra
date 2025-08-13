@@ -143,21 +143,7 @@ export default function UserInput() {
     }
   };
 
-  const handleSave = () => {
-    const solarData = { 
-      panelDetails, 
-      plotDetails, 
-      roofCoverage, 
-      bescomId,
-      currentLocation,
-      imageFile: imageFile?.name || null,
-      timestamp: new Date().toISOString()
-    };
-    console.log("Solar Panel Data:", solarData);
-    
-    // Store data in localStorage
-    localStorage.setItem('solarPanelData', JSON.stringify(solarData));
-  };
+  // Save Configuration removed
 
   // If we have analysis results, show the results page
   if (analysisResults) {
@@ -330,9 +316,7 @@ export default function UserInput() {
           )}
         </button>
 
-        <button onClick={handleSave} className={styles.saveButton}>
-          💾 Save Configuration
-        </button>
+        {/* Save Configuration button removed */}
       </div>
 
       {/* Location Info */}

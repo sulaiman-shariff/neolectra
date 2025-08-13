@@ -3,6 +3,8 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
+import os
+from datetime import datetime
 
 import cv2
 import numpy as np
@@ -329,7 +331,9 @@ def layout_panels(
     roof_area_m2: float,
     roof_length_m: Optional[float] = None,
     roof_width_m: Optional[float] = None,
-    params: LayoutParams = LayoutParams()
+    params: LayoutParams = LayoutParams(),
+    debug_dir: Optional[str] = None,
+    debug_basename: Optional[str] = None
 ) -> LayoutResult:
 
     assert 30 <= params.fill_pct <= 90, "fill_pct must be between 30 and 90"
@@ -473,6 +477,19 @@ def layout_panels(
         cv2.polylines(overlay, [poly], True, (40, 40, 40), 2)
     annotated = cv2.addWeighted(bgr, 0.68, overlay, 0.32, 0)
 
+    # Optional debug output saving
+    if debug_dir is not None:
+        try:
+            os.makedirs(debug_dir, exist_ok=True)
+            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+            base = debug_basename or f"layout_{ts}"
+            cv2.imwrite(os.path.join(debug_dir, f"{base}_annotated.png"), annotated)
+            cv2.imwrite(os.path.join(debug_dir, f"{base}_overlay.png"), overlay)
+            cv2.imwrite(os.path.join(debug_dir, f"{base}_mask.png"), mask)
+        except Exception:
+            # Silent fail for debug saving so the main pipeline isn't interrupted
+            pass
+
     # stats
     # compute achieved percentages
     # panel area in m² (already correct)
@@ -543,7 +560,9 @@ def get_solar_layout(
     min_boundary_clearance_m: float = 0.50,   # parapet/elevation ring
     obstacle_clearance_m: float = 0.25,
     obstacle_mode: str = "auto",              # "auto" | "light" | "off"
-    angle_deg: Optional[float] = None
+    angle_deg: Optional[float] = None,
+    debug_dir: Optional[str] = None,
+    debug_basename: Optional[str] = None
 ) -> Dict:
     params = LayoutParams(
         panel_size=size_label,
@@ -555,7 +574,15 @@ def get_solar_layout(
         obstacle_mode=obstacle_mode,
         angle_deg=angle_deg
     )
-    result = layout_panels(image, area_m2, length_m, width_m, params)
+    result = layout_panels(
+        image,
+        area_m2,
+        length_m,
+        width_m,
+        params,
+        debug_dir=debug_dir,
+        debug_basename=debug_basename,
+    )
     return {
         "image_with_panels_bgr": result.annotated_bgr,
         "roof_mask": result.mask,

@@ -3,7 +3,7 @@ import AutocompleteCard from "@/components/autocompleteCard";
 import styles from "./page.module.css";
 import { Map, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
 import Link from "next/link";
-import { ChangeEvent, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { FaArrowRight } from "react-icons/fa";
 import { FaSearch } from "react-icons/fa";
 import html2canvas from "html2canvas";
@@ -13,12 +13,15 @@ import { useAppDispatch, useAppSelector } from "@/components/reduxHooks";
 export default function RenderMap() {
   const map = useMap("main-map");
   const placesLib = useMapsLibrary("places");
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
 
   const [searchText, setSearchText] = useState<string>("");
   const [results, setResults] = useState<any>(null);
   const [marker, setMarker] = useState<google.maps.Marker | null>(null);
   const [hide, setHide] = useState<Boolean>(false);
   const [image, setImage] = useState<any>(null);
+  const [sessionToken, setSessionToken] = useState<google.maps.places.AutocompleteSessionToken | null>(null);
+  const [webSessionToken, setWebSessionToken] = useState<string | null>(null);
 
   const screenshotRef = useRef<any>(null);
 
@@ -54,13 +57,42 @@ export default function RenderMap() {
   async function handleSearch(e: ChangeEvent<HTMLInputElement>) {
     setSearchText(e.target.value);
     //trigger autocomplete only after every 6 letters
-    if (searchText.length % 2 == 0 && searchText != "" && placesLib && map) {
-      const autocomplete = new placesLib.AutocompleteService();
-      let autoResults = await autocomplete.getPlacePredictions({ input: searchText });
-      console.log("trigger autocomplete");
-      console.log("Autocomplete results ", autoResults);
-      //add autocomplete results to the state array and reverse to get the closest prediction on top (because using column reverse)
-      setResults(autoResults.predictions.reverse());
+    if (searchText.length % 2 == 0 && searchText != "" && map) {
+      try {
+        if (!webSessionToken) {
+          setWebSessionToken(Math.random().toString(36).slice(2));
+        }
+        const resp = await fetch("https://places.googleapis.com/v1/places:autocomplete", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": apiKey,
+            "X-Goog-FieldMask": "*",
+          },
+          body: JSON.stringify({
+            input: searchText,
+            languageCode: "en",
+            sessionToken: webSessionToken || undefined,
+          }),
+        });
+        const data = await resp.json();
+        const suggestions = Array.isArray(data?.suggestions) ? data.suggestions : [];
+        const adapted = suggestions.map((s: any) => {
+          const p = s.placePrediction || {};
+          const sf = p.structuredFormat || {};
+          return {
+            place_id: p.placeId,
+            description: p.text?.text || [sf.mainText?.text, sf.secondaryText?.text].filter(Boolean).join(", "),
+            structured_formatting: {
+              main_text: sf.mainText?.text || "",
+              secondary_text: sf.secondaryText?.text || "",
+            },
+          };
+        });
+        setResults(adapted.reverse());
+      } catch (err) {
+        console.log("Places (New) autocomplete failed", err);
+      }
     }
   }
 
@@ -93,6 +125,9 @@ export default function RenderMap() {
     dispatch(saveAdd(details.description));
     //close the search menu after selecting location
     setSearchText("");
+    // end the autocomplete session after a selection
+    setSessionToken(null);
+    setWebSessionToken(null);
   }
 
   return (

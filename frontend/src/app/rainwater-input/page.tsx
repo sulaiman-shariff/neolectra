@@ -176,21 +176,7 @@ export default function RainwaterInput() {
     }
   };
 
-  const handleSave = () => {
-    const rainwaterData = {
-      roof: roofDetails,
-      harvesting: harvestingConfig,
-      tank: tankConfig,
-      location: locationData,
-      imageFile: imageFile?.name || null,
-      timestamp: new Date().toISOString()
-    };
-    
-    console.log("Rainwater Harvesting Data:", rainwaterData);
-    
-    // Store data in localStorage
-    localStorage.setItem('rainwaterHarvestingData', JSON.stringify(rainwaterData));
-  };
+  // Save Configuration removed
 
   // If we have analysis results, show the results page
   if (analysisResults) {
@@ -430,9 +416,7 @@ export default function RainwaterInput() {
           )}
         </button>
 
-        <button onClick={handleSave} className={styles.saveButton}>
-          💾 Save Configuration
-        </button>
+        {/* Save Configuration button removed */}
 
         <Link href="/map">
           <button className={styles.mapButton}>

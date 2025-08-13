@@ -26,7 +26,6 @@ import uvicorn
 import statistics
 import pandas as pd
 import numpy as np
-import requests_cache
 
 # Import our custom modules
 from rooftop_detection import (

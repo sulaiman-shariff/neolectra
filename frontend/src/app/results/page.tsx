@@ -58,34 +58,28 @@ export default function Results() {
   }
 
   async function getSolarImage() {
-    let data = new FormData();
-    let res = await fetch(clippedImg);
-    let blobs = await res.blob();
-    let imgFile = new File([blobs], "cropp", { type: "image/jpeg" });
-    data.append("image", imgFile);
-    data.append("zoomLevel", `${zoomLevel}`);
-    data.append("lat", `${lat}`);
-    axios
-      .post("http://127.0.0.1:8000/solar", data, {
-        headers: {
-          accept: "application/json",
-          "Accept-Language": "en-US,en;q=0.8",
-          "Content-Type": `multipart/form-data`,
-        },
-      })
-      .then((response) => {
-        console.log(response);
-        //@ts-ignore
-        setFinalImg("data:image/jpeg;base64," + response?.data?.image);
-        //@ts-ignore
-        setProcessedArea(response?.data?.area);
-        dispatch(saveProcessed({ processedArea: response?.data?.area, processedImg: response?.data?.image }));
-        return response;
-      })
-      .catch((error: any) => {
-        console.log(error);
-        return null;
+    try {
+      const data = new FormData();
+      const res = await fetch(clippedImg);
+      const blob = await res.blob();
+      const imgFile = new File([blob], "roof.png", { type: "image/png" });
+      data.append("file", imgFile);
+
+      const response = await axios.post("http://127.0.0.1:8000/api/solar/analyze", data, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
+
+      const r = response?.data || {};
+      const img64 = r.image_base64 || null;
+      if (img64) {
+        setFinalImg(`data:image/png;base64,${img64}`);
+      }
+      const area = r.panel_area ?? null;
+      setProcessedArea(area);
+      dispatch(saveProcessed({ processedArea: area, processedImg: img64 }));
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   useEffect(() => {

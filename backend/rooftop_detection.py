@@ -5,6 +5,7 @@ Rooftop detection wrapper module for main.py compatibility
 import numpy as np
 from PIL import Image
 import cv2
+import rooftop as rooftop_mod
 
 def get_roof_data(image: Image.Image) -> dict:
     """
@@ -79,45 +80,48 @@ def get_solar_data(image: Image.Image) -> dict:
     """
     Get solar panel layout data from image
     """
-    # Get roof area first
+    # 1) Estimate roof area first (pixels->m² approximation)
     roof_data = get_roof_data(image)
-    roof_area = roof_data["roof_area"]
-    
-    # Simple solar panel calculations (can be enhanced later)
-    # Typical panel efficiency and sizing calculations
-    panel_efficiency = 0.20  # 20% efficiency for modern panels
-    system_efficiency = 0.85  # Overall system efficiency accounting for inverter losses, etc.
-    avg_daily_sun_hours = 5.5  # Average for Bangalore
-    
-    # Assume we can use about 70% of roof area for panels
-    usable_roof_area = roof_area * 0.7
-    
-    # Each panel is approximately 2.278m x 1.134m = 2.58 m² (medium size from rooftop.py)
-    panel_area_m2 = 2.58
-    panel_power_w = 520  # watts per panel
-    
-    # Calculate number of panels
-    num_panels = int(usable_roof_area / panel_area_m2)
-    actual_panel_area = num_panels * panel_area_m2
-    
-    # Calculate power generation
-    total_power_kw = (num_panels * panel_power_w) / 1000  # Convert to kW
-    
-    # Calculate annual energy generation
-    # Formula: Power (kW) × Daily sun hours × 365 × System efficiency
+    roof_area_m2 = float(roof_data["roof_area"])
+
+    # 2) Use advanced layout algorithm to generate real panel placement and annotated image
+    layout = rooftop_mod.get_solar_layout(
+        image=image,
+        area_m2=roof_area_m2,
+        size_label="medium",
+        fill_pct=60.0,  # slightly higher default coverage
+        spacing_m=0.12,
+        edge_clearance_m=0.25,
+        min_boundary_clearance_m=0.50,
+        obstacle_clearance_m=0.25,
+        obstacle_mode="auto",
+        angle_deg=None,
+    )
+
+    annotated_bgr = layout["image_with_panels_bgr"]
+    stats = layout["stats"]
+
+    # 3) Pull key stats
+    actual_panel_area = float(stats.get("panel_area_m2", 0.0))
+    num_panels = int(stats.get("panels_count", 0))
+    panel_model = str(stats.get("panel_size", "medium"))
+
+    # Convert wattage to kW and estimate energy as before
+    total_power_kw = float(stats.get("capacity_estimated_kWp", 0.0))
+
+    # 4) Keep a simple annual energy estimate (can be refined later)
+    system_efficiency = 0.85
+    avg_daily_sun_hours = 5.5
     annual_energy_kwh = total_power_kw * avg_daily_sun_hours * 365 * system_efficiency
-    
-    # Create a simple annotated image (placeholder)
-    img_array = np.array(image)
-    annotated_image = img_array.copy()
-    
+
     return {
         "area_of_panels": actual_panel_area,
         "num_panels": num_panels,
-        "panel_efficiency": (actual_panel_area / roof_area) * 100 if roof_area > 0 else 0,
-        "image_with_panels": annotated_image,
+        "panel_efficiency": (actual_panel_area / roof_area_m2) * 100 if roof_area_m2 > 0 else 0,
+        "image_with_panels": annotated_bgr,
         "total_power_kw": total_power_kw,
-        "annual_energy_kwh": annual_energy_kwh
+        "annual_energy_kwh": annual_energy_kwh,
+        "panel_model": panel_model,
     }
 
 def get_rainwater_data(image: Image.Image) -> dict:

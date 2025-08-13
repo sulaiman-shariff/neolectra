@@ -360,7 +360,6 @@
   transform: none;
 }
 
-.saveButton,
 .mapButton {
   padding: 1.25rem 2rem;
   border: none;
@@ -379,31 +378,7 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
-.saveButton {
-  background: linear-gradient(135deg, #10b981, #06b6d4);
-  color: white;
-}
-
-.saveButton::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s ease;
-}
-
-.saveButton:hover::before {
-  left: 100%;
-}
-
-.saveButton:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 20px 40px rgba(6, 182, 212, 0.4);
-  background: linear-gradient(135deg, #34d399, #22d3ee);
-}
+/* saveButton styles removed */
 
 .mapButton {
   background: linear-gradient(135deg, #fbbf24, #f59e0b);
