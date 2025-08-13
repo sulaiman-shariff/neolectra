@@ -562,34 +562,3 @@ def get_solar_layout(
         "panels_xy": result.panel_polys_xy,
         "stats": result.stats,
     }
-
-
-# Sample usage
-if __name__=="__main__":
-    print(get_solar_layout(
-        image=Image.open("C:\\Users\\iffat\\OneDrive\\Desktop\\neolectra\\backend\\rooftop_image.jpg"),
-        area_m2=120.0,
-        length_m=10.0,
-        width_m=12.0,
-        size_label="medium",
-        fill_pct=50.0,
-        spacing_m=0.08,
-        edge_clearance_m=0.20,
-        angle_deg=0.0
-    ))
-
-    # Create the final image
-    final_image = get_solar_layout(
-        image=Image.open("C:\\Users\\iffat\\OneDrive\\Desktop\\neolectra\\backend\\rooftop_image.jpg"),
-        area_m2=120.0,
-        length_m=10.0,
-        width_m=12.0,
-        size_label="medium",
-        fill_pct=50.0,
-        spacing_m=0.08,
-        edge_clearance_m=0.20,
-        angle_deg=0.0
-    )["image_with_panels_bgr"]
-
-    # Save the final image
-    cv2.imwrite("C:\\Users\\iffat\\OneDrive\\Desktop\\neolectra\\backend\\rooftop_image_with_panels.jpg", final_image)
