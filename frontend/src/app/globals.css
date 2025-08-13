@@ -1,0 +1,188 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Design System Colors */
+  --primary-emerald: #10b981;
+  --primary-emerald-dark: #064e3b;
+  --primary-emerald-light: #34d399;
+  
+  --secondary-cyan: #06b6d4;
+  --secondary-cyan-dark: #0891b2;
+  --secondary-cyan-light: #22d3ee;
+  
+  --accent-yellow: #fbbf24;
+  --accent-yellow-dark: #d97706;
+  --accent-yellow-light: #fde047;
+  --accent-orange: #f59e0b;
+  
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #10b981, #06b6d4);
+  --gradient-background: linear-gradient(180deg, #043C35 0%, #032722 45%, #000000 100%);
+  --gradient-radial: radial-gradient(1200px 600px at 70% -10%, rgba(6,182,212,0.35), transparent 60%), radial-gradient(800px 400px at 10% 10%, rgba(251,191,36,0.28), transparent 60%);
+  
+  /* Glass effects */
+  --glass-light: rgba(255, 255, 255, 0.1);
+  --glass-medium: rgba(255, 255, 255, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: white;
+  background: var(--gradient-background);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Utility classes */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .glass {
+    background: var(--glass-light);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+  }
+  
+  .glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 1.5rem;
+  }
+  
+  .gradient-text {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .hover-lift {
+    transition: all 0.3s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-4px);
+  }
+  
+  .hover-glow:hover {
+    box-shadow: 0 20px 40px rgba(6, 182, 212, 0.2);
+  }
+}
+
+/* Improved scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gradient-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-cyan);
+}
+
+/* Animation keyframes */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(6, 182, 212, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(6, 182, 212, 0.6); }
+}
+
+/* Component base styles */
+.btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(6, 182, 212, 0.3);
+}
+
+.btn-secondary {
+  background: var(--glass-light);
+  color: white;
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  font-size: 1rem;
+}
+
+.btn-secondary:hover {
+  background: var(--glass-medium);
+  transform: translateY(-2px);
+}
+
+.input-field {
+  background: var(--glass-light);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: white;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  width: 100%;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--secondary-cyan);
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+}
+
+.input-field::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}

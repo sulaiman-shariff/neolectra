@@ -1,0 +1,41 @@
+# Core FastAPI dependencies
+fastapi==0.115.4
+uvicorn==0.32.0
+python-multipart==0.0.12
+
+# Image processing
+Pillow==11.0.0
+opencv-python==4.8.1.78
+matplotlib==3.10.0
+numpy==1.26.4
+
+# Geometric calculations
+shapely==2.0.6
+
+# Weather data and calculations
+openmeteo-requests==1.7.0
+requests-cache==1.2.1
+retry-requests==2.0.0
+pandas==2.2.3
+
+# Date/time handling
+python-dateutil==2.8.2
+
+# PDF processing for BESCOM
+PyPDF2==3.0.1
+pdfplumber==0.11.7
+
+# Encryption for BESCOM
+pycryptodome==3.10.1
+
+# HTTP requests
+requests==2.32.3
+
+# Data validation
+pydantic==2.10.2
+
+# CORS support
+python-dotenv==1.0.0
+
+#AWS
+mangum
