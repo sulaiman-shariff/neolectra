@@ -2,6 +2,7 @@
 
 import styles from "./page.module.css";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 export default function UserInput() {
   const [panelDetails, setPanelDetails] = useState("Tiny");
@@ -12,6 +13,7 @@ export default function UserInput() {
     accuracy: "exact",
   });
   const [roofCoverage, setRoofCoverage] = useState(50);
+  const [bescomId, setBescomId] = useState("");
 
   useEffect(() => {
     const lengthNum = parseFloat(plotDetails.length); // Always in meters
@@ -29,11 +31,22 @@ export default function UserInput() {
   }, [plotDetails.length, plotDetails.width, plotDetails.accuracy]);
 
   const handleSave = () => {
-    console.log({ panelDetails, plotDetails, roofCoverage });
+    const solarData = { panelDetails, plotDetails, roofCoverage, bescomId };
+    console.log("Solar Panel Data:", solarData);
+    
+    // Store data in localStorage
+    localStorage.setItem('solarPanelData', JSON.stringify(solarData));
+    
+    // You can navigate to results or next step here
+    // router.push('/solar-results');
   };
 
   return (
     <div className={styles.container}>
+      <Link href="/" className={styles.backButton}>
+        ← Back to Home
+      </Link>
+      
       <h1 className={styles.title}>Solar Panel Setup</h1>
 
       {/* Panel Details */}
@@ -44,11 +57,23 @@ export default function UserInput() {
           value={panelDetails}
           onChange={(e) => setPanelDetails(e.target.value)}
         >
-          <option value="Tiny">Tiny</option>
-          <option value="Small">Small</option>
-          <option value="Medium">Medium</option>
+          <option value="Tiny">Tiny (Up to 2kW)</option>
+          <option value="Small">Small (2-5kW)</option>
+          <option value="Medium">Medium (5-10kW)</option>
           <option value="Large">Large</option>
         </select>
+      </div>
+
+      {/* BESCOM ID (Optional) */}
+      <div className={styles.formGroup}>
+        <label>BESCOM ID (Optional)</label>
+        <input
+          type="text"
+          placeholder="Enter your BESCOM ID"
+          value={bescomId}
+          onChange={(e) => setBescomId(e.target.value)}
+          className={styles.bescomInput}
+        />
       </div>
 
       {/* Plot Details */}
@@ -105,8 +130,20 @@ export default function UserInput() {
       </div>
 
       <button onClick={handleSave} className={styles.saveButton}>
-        Save
+        Save Configuration
       </button>
+
+      {/* Additional Info */}
+      <div className={styles.infoSection}>
+        <h3>⚡ Solar Power Facts</h3>
+        <ul>
+          <li>1kW solar system needs ~100 sq ft roof space</li>
+          <li>Karnataka offers up to 40% subsidy on solar installations</li>
+          <li>Average payback period: 4-6 years</li>
+          <li>Solar panels have 25+ year warranty</li>
+          <li>Net metering allows selling excess power back to grid</li>
+        </ul>
+      </div>
     </div>
   );
 }
