@@ -38,17 +38,17 @@ export default function Crop() {
                 <span style={{ marginLeft: "10px" }}>Clear</span>
                 <MdDeleteOutline className={styles.clearBoxIcon} />
               </button>
-              <Link href={"/results"}>
-                <button
-                  onClick={() => {
-                    dispatch(saveCrop(clippedImg));
-                  }}
-                  className={styles.nextButton}
-                >
-                  <span style={{ marginRight: "25px" }}>Next</span>
-                  <FaArrowRight className={styles.nextBoxIcon} />
-                </button>
-              </Link>
+ <Link href={"/userinput"}>
+  <button
+    onClick={() => {
+      dispatch(saveCrop(clippedImg));
+    }}
+    className={styles.nextButton}
+  >
+    <span style={{ marginRight: "25px" }}>Next</span>
+    <FaArrowRight className={styles.nextBoxIcon} />
+  </button>
+</Link>
             </div>
             <div className={styles.ball1}>&nbsp;&nbsp;</div>
             <div className={styles.ball2}>&nbsp;&nbsp;</div>
